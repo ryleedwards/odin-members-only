@@ -38,8 +38,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.get('/sign-up', (req, res) => res.render('sign-up-form'));
-
+app.get('/sign-up', user_controller.user_create_get);
 app.post('/sign-up', user_controller.user_create_post);
 
 passport.use(
