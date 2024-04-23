@@ -9,14 +9,12 @@ const session = require('express-session');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 const user_controller = require('./controllers/userController');
 const User = require('./models/user');
 
 /* ---- DATABASE SETUP ---- */
 const mongoDb = process.env.DB_STRING;
 
-const indexRouter = require('./routes/index');
 mongoose.connect(mongoDb);
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'mongo connection error'));
@@ -37,7 +35,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+const indexRouter = require('./routes/index');
+const authRouter = require('./routes/auth');
+
 app.use('/', indexRouter);
+app.use('/', authRouter);
 app.get('/sign-up', user_controller.user_create_get);
 app.post('/sign-up', user_controller.user_create_post);
 
@@ -73,7 +75,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.post(
-  '/log-in',
+  '/login',
   passport.authenticate('local', {
     successRedirect: '/',
     failureRedirect: '/',
