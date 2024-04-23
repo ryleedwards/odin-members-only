@@ -1,10 +1,32 @@
+require('dotenv').config();
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const session = require('express-session');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+/* ---- DATABASE SETUP ---- */
+const mongoDb = process.env.DB_STRING;
 
 const indexRouter = require('./routes/index');
+mongoose.connect(mongoDb);
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'mongo connection error'));
+
+const User = mongoose.model(
+  'User',
+  new Schema({
+    username: { type: String, required: true },
+    password: { type: String, required: true },
+  })
+);
+
+/* ---- EXPRESS SETUP ---- */
 
 const app = express();
 
@@ -13,6 +35,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 app.use(logger('dev'));
+app.use(session({ secret: 'cats', resave: false, saveUninitialized: true }));
+app.use(passport.session());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
