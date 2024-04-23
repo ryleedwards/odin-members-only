@@ -38,11 +38,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auth');
 
-app.use('/', indexRouter);
-app.use('/', authRouter);
-app.get('/sign-up', user_controller.user_create_get);
-app.post('/sign-up', user_controller.user_create_post);
-
 passport.use(
   new LocalStrategy(async (username, password, done) => {
     try {
@@ -73,6 +68,17 @@ passport.deserializeUser(async (id, done) => {
     done(err);
   }
 });
+
+app.use((req, res, next) => {
+  res.locals.currentUser = req.user;
+  next();
+});
+
+app.use('/', indexRouter);
+app.use('/', authRouter);
+
+app.get('/sign-up', user_controller.user_create_get);
+app.post('/sign-up', user_controller.user_create_post);
 
 app.post(
   '/login',
