@@ -1,4 +1,5 @@
 require('dotenv').config();
+const bcrypt = require('bcryptjs');
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
@@ -43,6 +44,74 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+app.get('/sign-up', (req, res) => res.render('sign-up-form'));
+
+app.post('/sign-up', async (req, res, next) => {
+  try {
+    bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
+      if (err) {
+        return next(err);
+      } else {
+        const user = new User({
+          username: req.body.username,
+          password: hashedPassword,
+        });
+        const result = await user.save();
+        res.redirect('/');
+      }
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+passport.use(
+  new LocalStrategy(async (username, password, done) => {
+    try {
+      const user = await User.findOne({ username: username });
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username' });
+      }
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) {
+        return done(null, false, { message: 'Incorrect password' });
+      }
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    }
+  })
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+});
+
+app.post(
+  '/log-in',
+  passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/',
+  })
+);
+
+app.get('/log-out', (req, res, next) => {
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+    res.redirect('/');
+  });
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
