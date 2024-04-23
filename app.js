@@ -10,6 +10,8 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const user_controller = require('./controllers/userController');
+const User = require('./models/user');
 
 /* ---- DATABASE SETUP ---- */
 const mongoDb = process.env.DB_STRING;
@@ -18,14 +20,6 @@ const indexRouter = require('./routes/index');
 mongoose.connect(mongoDb);
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'mongo connection error'));
-
-const User = mongoose.model(
-  'User',
-  new Schema({
-    username: { type: String, required: true },
-    password: { type: String, required: true },
-  })
-);
 
 /* ---- EXPRESS SETUP ---- */
 
@@ -46,24 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.get('/sign-up', (req, res) => res.render('sign-up-form'));
 
-app.post('/sign-up', async (req, res, next) => {
-  try {
-    bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
-      if (err) {
-        return next(err);
-      } else {
-        const user = new User({
-          username: req.body.username,
-          password: hashedPassword,
-        });
-        const result = await user.save();
-        res.redirect('/');
-      }
-    });
-  } catch (err) {
-    return next(err);
-  }
-});
+app.post('/sign-up', user_controller.user_create_post);
 
 passport.use(
   new LocalStrategy(async (username, password, done) => {
