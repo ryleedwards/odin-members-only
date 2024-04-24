@@ -69,6 +69,7 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
+// Store user in res.locals for access without passing var to view
 app.use((req, res, next) => {
   res.locals.currentUser = req.user;
   next();
@@ -76,9 +77,6 @@ app.use((req, res, next) => {
 
 app.use('/', indexRouter);
 app.use('/', authRouter);
-
-app.get('/sign-up', user_controller.user_create_get);
-app.post('/sign-up', user_controller.user_create_post);
 
 app.post(
   '/login',
