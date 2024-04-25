@@ -14,7 +14,9 @@ exports.user_create_post = asyncHandler(async (req, res, next) => {
     } else {
       // Create user object
       const user = new User({
-        username: req.body.username,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email,
         password: hashedPassword,
       });
       const result = await user.save();
